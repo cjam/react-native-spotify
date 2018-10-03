@@ -1,7 +1,2 @@
-
-import Queue from './src/Queue';
-import Spotify from './src/Spotify';
-
-Spotify.queue = Queue;
-
+import Spotify from './dist/Spotify';
 export default Spotify;
