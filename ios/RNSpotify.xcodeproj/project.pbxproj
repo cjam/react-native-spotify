@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		D658F0DF2164059C004649AB /* SpotifyiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D658F0DE2164059C004649AB /* SpotifyiOS.framework */; };
 		D6F24B8421653FAC00D58B82 /* RNSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = D6F24B832165372500D58B82 /* RNSpotify.m */; };
+		D6F24BC421665F4A00D58B82 /* RNSpotifyError.m in Sources */ = {isa = PBXBuildFile; fileRef = D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */; };
+		D6F24BD5216685B000D58B82 /* RNSpotifyCompletion.m in Sources */ = {isa = PBXBuildFile; fileRef = A0C233712036800A0063A745 /* RNSpotifyCompletion.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,9 +43,10 @@
 		B3E7B5881CC2AC0600A0062D /* RNSpotify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNSpotify.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* RNSpotify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNSpotify.m; sourceTree = "<group>"; };
 		D658F0DE2164059C004649AB /* SpotifyiOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpotifyiOS.framework; path = external/SpotifySDK/SpotifyiOS.framework; sourceTree = "<group>"; };
-		D6F24B81216536D700D58B82 /* Macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = "../../../../../_github/react-native-spotify/ios/Macros.h"; sourceTree = "<group>"; };
 		D6F24B822165372200D58B82 /* RNSpotify.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotify.h; sourceTree = "<group>"; };
 		D6F24B832165372500D58B82 /* RNSpotify.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotify.m; sourceTree = "<group>"; };
+		D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyError.m; sourceTree = "<group>"; };
+		D6F24BC321665F4A00D58B82 /* RNSpotifyError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyError.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,7 +74,10 @@
 			children = (
 				D6F24B822165372200D58B82 /* RNSpotify.h */,
 				D6F24B832165372500D58B82 /* RNSpotify.m */,
-				D6F24B81216536D700D58B82 /* Macros.h */,
+				D6F24BC321665F4A00D58B82 /* RNSpotifyError.h */,
+				D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */,
+				A0C233702036800A0063A745 /* RNSpotifyCompletion.h */,
+				A0C233712036800A0063A745 /* RNSpotifyCompletion.m */,
 				D6F24B802165368C00D58B82 /* Streaming */,
 				A0A434191FAE254F0073DAB9 /* Frameworks */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -94,8 +100,6 @@
 				B3E7B5891CC2AC0600A0062D /* RNSpotify.m */,
 				A00A83BD1FB5188A00394AF0 /* RNSpotifyConvert.h */,
 				A00A83BC1FB5188A00394AF0 /* RNSpotifyConvert.m */,
-				A0C233702036800A0063A745 /* RNSpotifyCompletion.h */,
-				A0C233712036800A0063A745 /* RNSpotifyCompletion.m */,
 				A0C233732036800A0063A745 /* RNSpotifyError.h */,
 				A0C233742036800A0063A745 /* RNSpotifyError.m */,
 				A0AD6941200E5B00003EC7D8 /* RNSpotifyProgressView.h */,
@@ -164,7 +168,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6F24BD5216685B000D58B82 /* RNSpotifyCompletion.m in Sources */,
 				D6F24B8421653FAC00D58B82 /* RNSpotify.m in Sources */,
+				D6F24BC421665F4A00D58B82 /* RNSpotifyError.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,7 +279,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/external/SpotifySDK/SpotifyiOS.framework/**",
+					"$(PROJECT_DIR)/external/SpotifySDK/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -284,7 +290,10 @@
 					"$(SRCROOT)/../../../react-native-events/ios",
 					"$(PROJECT_DIR)/external/SpotifySDK/SpotifyiOS.framework/Headers",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/external/SpotifySDK/",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RNSpotify;
 				SKIP_INSTALL = YES;
@@ -296,7 +305,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/external/SpotifySDK/SpotifyiOS.framework/**",
+					"$(PROJECT_DIR)/external/SpotifySDK/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -307,7 +316,10 @@
 					"$(SRCROOT)/../../../react-native-events/ios",
 					"$(PROJECT_DIR)/external/SpotifySDK/SpotifyiOS.framework/Headers",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/external/SpotifySDK/",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RNSpotify;
 				SKIP_INSTALL = YES;
