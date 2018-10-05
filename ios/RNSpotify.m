@@ -233,7 +233,7 @@ RCT_EXPORT_METHOD(getUserAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromis
     );
 }
 
-RCT_EXPORT_METHOD(skipToNext:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(skipToNextAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
     [_appRemote.playerAPI skipToNext:^(id  _Nullable result, NSError * _Nullable error) {
         if(error != nil){
             [[RNSpotifyError errorWithNSError:error] reject:reject];

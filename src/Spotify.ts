@@ -2,10 +2,12 @@
 import { NativeModules } from 'react-native';
 import RNEvents from 'react-native-events';
 import SpotifyApi from './SpotifyApi';
+export {default as SpotifyApiConfig} from './SpotifyApiConfig'
 
 const Spotify = NativeModules.RNSpotify as SpotifyApi;
-RNEvents.register(Spotify);
-RNEvents.conform(Spotify);
+
+// RNEvents.register(Spotify);
+// RNEvents.conform(Spotify);
 
 // const sendRequest = Spotify.sendRequest;
 

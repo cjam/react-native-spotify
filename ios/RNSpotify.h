@@ -24,7 +24,7 @@
 // getUserAsync
 -(void)getUserAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
--(void)skipToNext:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)skipToNextAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 // loginAsync
 //-(void)loginAsync(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
