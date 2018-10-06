@@ -1,4 +1,4 @@
-
+#import <UIKit/UIKit.h>
 #if __has_include("RCTBridgeModule.h")
 #import "RCTBridgeModule.h"
 #else
@@ -10,7 +10,12 @@
 #else
 #import <RNEventEmitter/RNEventEmitter.h>
 #endif
+
 @interface RNSpotify : NSObject <RCTBridgeModule, RNEventConformer>
+
+-(BOOL)application:(UIApplication *)application openURL:(NSURL *)URL options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options;
+
++(instancetype)sharedInstance;
 
 //test()
 -(id)test;

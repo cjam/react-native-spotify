@@ -16,30 +16,54 @@
 #define SPOTIFY_API_BASE_URL @"https://api.spotify.com/"
 #define SPOTIFY_API_URL(endpoint) [NSURL URLWithString:NSString_concat(SPOTIFY_API_BASE_URL, endpoint)]
 
+static RNSpotify *sharedInstance = nil;
+
 @interface RNSpotify() <SPTSessionManagerDelegate>
 {
     BOOL _initialized;
     NSDictionary* _options;
-    SPTSessionManager* _sessionManager;
-    SPTAppRemote* _appRemote;
     
     NSMutableArray<RNSpotifyCompletion*>* _sessionManagerCallbacks;
+    SPTSessionManager *_sessionManager;
+    SPTAppRemote *_appRemote;
 }
-
 @end
 
 @implementation RNSpotify
 
 @synthesize bridge = _bridge;
 
+#pragma mark Singleton Methods
+
++ (instancetype)sharedInstance {
+    // Hopefully ReactNative can take care of allocating and initializing our instance
+    // otherwise we'll need to check here
+    return sharedInstance;
+}
+
 -(id)init
 {
-    if(self = [super init])
-    {
-        _initialized = NO;
-        _sessionManagerCallbacks = [NSMutableArray array];
+    // This is to hopefully maintain the singleton pattern within our React App.
+    // Since ReactNative is the one allocating and initializing our instance,
+    // we need to store the instance within the sharedInstance otherwise we'll
+    // end up with a different one when calling shared instance statically
+    if(sharedInstance == nil){
+        if(self = [super init])
+        {
+            NSLog(@"RNSpotify Initialized");
+            _initialized = NO;
+            _sessionManagerCallbacks = [NSMutableArray array];
+        }
+        
+        static dispatch_once_t once;
+        dispatch_once(&once, ^
+                      {
+                          sharedInstance = self;
+                      });
+    }else{
+        NSLog(@"Returning shared instance");
     }
-    return self;
+    return sharedInstance;
 }
 
 #pragma mark - Utilities
@@ -62,7 +86,36 @@
     return dict.mutableCopy;
 }
 
+#pragma mark URL handling
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)URL options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
+{
+    // Not sure what we do if session manager is nil, perhaps store the parameters for when
+    // we initialize?
+    BOOL returnVal = NO;
+    if(_sessionManager != nil){
+        NSLog(@"Setting application openURL and options on session manager");
+        returnVal = [_sessionManager application:application openURL:URL options:options];
+        NSDictionary *params = [[SPTAppRemote alloc] authorizationParametersFromURL:URL];
+        NSString *errorDescription = params[SPTAppRemoteErrorDescriptionKey];
+        // If there was an error we should reject our SpotifyCompletion
+        if(errorDescription){
+//            [self rejectCompletions:_sessionManagerCallbacks error:[RNSpotifyError errorWithNSError:[SPTError errorWithCode:SPTAuthorizationFailedErrorCode description: errorDescription]]];
+            returnVal = NO;
+        }
+    }
+    if(returnVal){
+//        [self resolveCompletions:_sessionManagerCallbacks result:nil];
+    }
+    return returnVal;
+}
+
+
 #pragma mark - SPTSessionManagerDelegate
+
+- (void)addCompletion:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray completion:(RNSpotifyCompletion*)callback{
+    [callbackArray addObject:callback];
+}
 
 - (NSArray<RNSpotifyCompletion*>*)popCompletionCallbacks:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray{
     NSArray<RNSpotifyCompletion*>* callbacks = [NSArray arrayWithArray:callbackArray];
@@ -70,13 +123,26 @@
     return callbacks;
 }
 
+- (void)rejectCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks error:(RNSpotifyError*) error{
+    NSArray<RNSpotifyCompletion*>* completions = [self popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion reject:error];
+    }
+}
+
+- (void)resolveCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks result:(id) result{
+    NSArray<RNSpotifyCompletion*>* completions = [self popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion resolve:result];
+    }
+}
+
+
 - (void)sessionManager:(SPTSessionManager *)manager didInitiateSession:(SPTSession *)session
 {
-    NSArray<RNSpotifyCompletion*>* sessionCallbacks = [self popCompletionCallbacks:_sessionManagerCallbacks];
-    for(RNSpotifyCompletion* completion in sessionCallbacks)
-    {
-        [completion resolve:session];
-    }
+    [self resolveCompletions:_sessionManagerCallbacks result:session];
     NSLog(@"Session Initiated");
 //    [self presentAlertControllerWithTitle:@"Authorization Succeeded"
 //                                  message:session.description
@@ -85,11 +151,7 @@
 
 - (void)sessionManager:(SPTSessionManager *)manager didFailWithError:(NSError *)error
 {
-    NSArray<RNSpotifyCompletion*>* sessionCallbacks = [self popCompletionCallbacks:_sessionManagerCallbacks];
-    for(RNSpotifyCompletion* completion in sessionCallbacks)
-    {
-        [completion reject:[RNSpotifyError errorWithNSError:error]];
-    }
+    [self rejectCompletions:_sessionManagerCallbacks error:[RNSpotifyError errorWithNSError:error]];
     NSLog(@"Session Manager Failed");
 //    [self presentAlertControllerWithTitle:@"Authorization Failed"
 //                                  message:error.description
@@ -98,11 +160,7 @@
 
 - (void)sessionManager:(SPTSessionManager *)manager didRenewSession:(SPTSession *)session
 {
-    NSArray<RNSpotifyCompletion*>* sessionCallbacks = [self popCompletionCallbacks:_sessionManagerCallbacks];
-    for(RNSpotifyCompletion* completion in sessionCallbacks)
-    {
-        [completion resolve:session];
-    }
+    [self resolveCompletions:_sessionManagerCallbacks result:session];
     NSLog(@"Session Renewed");
 //    [self presentAlertControllerWithTitle:@"Session Renewed"
 //                                  message:session.description
@@ -138,75 +196,54 @@ RCT_EXPORT_METHOD(initializeAsync:(NSDictionary*)options resolve:(RCTPromiseReso
         return;
     }
 
-    // load default options
+    // store the options
     _options = options;
     
     SPTConfiguration* configuration = [SPTConfiguration configurationWithClientID:options[@"clientID"] redirectURL:[NSURL URLWithString:options[@"redirectURL"]]];
     
-    // Initialize through AppRemote
-    _appRemote = [[SPTAppRemote alloc] initWithConfiguration:configuration logLevel:SPTAppRemoteLogLevelDebug];
-    
-    BOOL spotifyInstalled = [_appRemote authorizeAndPlayURI:@"spotify:track:69bp2EbF7Q2rqc5N3ylezZ"];
-    
-    if(spotifyInstalled){
-        NSLog(@"Spotify Installed");
-    }else{
-        NSLog(@"Spotify Not Installed");
-    }
-    
-    [_appRemote connect];
-    if(_appRemote.isConnected){
-        resolve(@YES);
-    }else{
-        [[RNSpotifyError errorWithCodeObj:RNSpotifyErrorCode.NotInitialized message:@"Not Connected"] reject:reject];
-    }
-    
+    // Add swap and refresh urls to config if present
     if(options[@"tokenSwapURL"] != nil){
-        configuration.tokenSwapURL = [NSURL URLWithString: options[@"tokenSwapUrl"]];
+        configuration.tokenSwapURL = [NSURL URLWithString: options[@"tokenSwapURL"]];
     }
+    
     if(options[@"tokenRefreshURL"] != nil){
         configuration.tokenRefreshURL = [NSURL URLWithString: options[@"tokenRefreshURL"]];
     }
-
-    _sessionManager = [SPTSessionManager sessionManagerWithConfiguration:configuration delegate:self];
-
-    
-    // load iOS-specific options
-    NSDictionary* iosOptions = options[@"ios"];
-    if(iosOptions == nil)
-    {
-        iosOptions = @{};
+ 
+    // Default Scope
+    SPTScope scope = SPTUserFollowReadScope | SPTAppRemoteControlScope;
+    if(options[@"scope"] != nil){
+        scope = (int)options[@"scope"];
     }
-//    _audioSessionCategory = iosOptions[@"audioSessionCategory"];
-//    if(_audioSessionCategory == nil)
-//    {
-//        _audioSessionCategory = AVAudioSessionCategoryPlayback;
-//    }
+    
+    // Allocate our _sessionManager
+    _sessionManager = [SPTSessionManager sessionManagerWithConfiguration:configuration delegate:self];
+    
 
+    [self addCompletion:_sessionManagerCallbacks completion:[RNSpotifyCompletion                                                       onResolve:^(SPTSession *session){
+        self->_appRemote = [[SPTAppRemote alloc] initWithConfiguration:configuration logLevel:SPTAppRemoteLogLevelDebug];
+        self->_appRemote.connectionParameters.accessToken = session.accessToken;
+        [self->_appRemote connect];
+        resolve(@YES);
+    } onReject:^(RNSpotifyError *error) {
+        [error reject:reject];
+    }]];
+    
+    
+    
+    
+    if (@available(iOS 11, *)) {
+        // Use this on iOS 11 and above to take advantage of SFAuthenticationSession
+        [_sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption];
+    } else {
+        // todo: figure out the view controller for this
+        // Use this on iOS versions < 11 to use SFSafariViewController
+//        [self.sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption presentingViewController:self];
+    }
+    
     // done initializing
     _initialized = YES;
 
-//    // call callback
-//    NSNumber* loggedIn = [self isLoggedIn];
-//    resolve(loggedIn);
-//    if(loggedIn.boolValue)
-//    {
-//        [self sendEvent:@"login" args:@[]];
-//    }
-//
-//    [self logBackInIfNeeded:[RNSpotifyCompletion<NSNumber*> onReject:^(RNSpotifyError* error) {
-//        // failure
-//    } onResolve:^(NSNumber* loggedIn) {
-//        // success
-//        if(loggedIn.boolValue)
-//        {
-//            // initialize player
-//            [self initializePlayerIfNeeded:[RNSpotifyCompletion onComplete:^(id unused, RNSpotifyError* unusedError) {
-//                // done
-//            }]];
-//        }
-//    }] waitForDefinitiveResponse:YES];
-    resolve(@YES);
 }
 
 
@@ -240,6 +277,7 @@ RCT_EXPORT_METHOD(skipToNextAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPro
         }
         resolve(result);
     }];
+//    [[RNSpotifyError errorWithCodeObj:RNSpotifyErrorCode.NotImplemented] reject:reject];
 }
 
 RCT_EXPORT_METHOD(loginAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
