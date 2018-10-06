@@ -5,5 +5,8 @@ export default interface SpotifyApi {
 
     isInitialized():boolean;
     initializeAsync(config:SpotifyApiConfig):Promise<void>;
-    skipToNextAsync():Promise<void>;
+    resume():Promise<void>;
+    pause():Promise<void>;
+    skipToNext():Promise<void>;
+    skipToPrevious():Promise<void>;
 }

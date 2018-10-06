@@ -1,6 +1,7 @@
 
 #import "RNSpotify.h"
 #import <AVFoundation/AVFoundation.h>
+#import <React/RCTConvert.h>
 //#import <SpotifyiOS/SpotifyiOS.h>
 //#import <SpotifyAuthentication/SpotifyAuthentication.h>
 //#import <SpotifyMetadata/SpotifyMetadata.h>
@@ -16,17 +17,25 @@
 #define SPOTIFY_API_BASE_URL @"https://api.spotify.com/"
 #define SPOTIFY_API_URL(endpoint) [NSURL URLWithString:NSString_concat(SPOTIFY_API_BASE_URL, endpoint)]
 
+
+// Static Singleton instance
 static RNSpotify *sharedInstance = nil;
 
-@interface RNSpotify() <SPTSessionManagerDelegate>
+@interface RNSpotify() <SPTSessionManagerDelegate,SPTAppRemoteDelegate>
 {
     BOOL _initialized;
+    BOOL _isInitializing;
     NSDictionary* _options;
     
     NSMutableArray<RNSpotifyCompletion*>* _sessionManagerCallbacks;
+    NSMutableArray<RNSpotifyCompletion*>* _appRemoteCallbacks;
+    
+    SPTConfiguration *_apiConfiguration;
     SPTSessionManager *_sessionManager;
     SPTAppRemote *_appRemote;
 }
+- (void)initializeSessionManager:(NSDictionary*)options completionCallback:(RNSpotifyCompletion*)completion;
+- (void)initializeAppRemote:(SPTSession*)session completionCallback:(RNSpotifyCompletion*)completion;
 @end
 
 @implementation RNSpotify
@@ -53,6 +62,10 @@ static RNSpotify *sharedInstance = nil;
             NSLog(@"RNSpotify Initialized");
             _initialized = NO;
             _sessionManagerCallbacks = [NSMutableArray array];
+            _appRemoteCallbacks = [NSMutableArray array];
+            _apiConfiguration = nil;
+            _sessionManager = nil;
+            _appRemote = nil;
         }
         
         static dispatch_once_t once;
@@ -86,6 +99,28 @@ static RNSpotify *sharedInstance = nil;
     return dict.mutableCopy;
 }
 
++ (NSArray<RNSpotifyCompletion*>*)popCompletionCallbacks:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray{
+    NSArray<RNSpotifyCompletion*>* callbacks = [NSArray arrayWithArray:callbackArray];
+    [callbackArray removeAllObjects];
+    return callbacks;
+}
+
++ (void)rejectCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks error:(RNSpotifyError*) error{
+    NSArray<RNSpotifyCompletion*>* completions = [RNSpotify popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion reject:error];
+    }
+}
+
++ (void)resolveCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks result:(id) result{
+    NSArray<RNSpotifyCompletion*>* completions = [RNSpotify popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion resolve:result];
+    }
+}
+
 #pragma mark URL handling
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)URL options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
@@ -113,36 +148,9 @@ static RNSpotify *sharedInstance = nil;
 
 #pragma mark - SPTSessionManagerDelegate
 
-- (void)addCompletion:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray completion:(RNSpotifyCompletion*)callback{
-    [callbackArray addObject:callback];
-}
-
-- (NSArray<RNSpotifyCompletion*>*)popCompletionCallbacks:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray{
-    NSArray<RNSpotifyCompletion*>* callbacks = [NSArray arrayWithArray:callbackArray];
-    [callbackArray removeAllObjects];
-    return callbacks;
-}
-
-- (void)rejectCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks error:(RNSpotifyError*) error{
-    NSArray<RNSpotifyCompletion*>* completions = [self popCompletionCallbacks:callbacks];
-    for(RNSpotifyCompletion* completion in completions)
-    {
-        [completion reject:error];
-    }
-}
-
-- (void)resolveCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks result:(id) result{
-    NSArray<RNSpotifyCompletion*>* completions = [self popCompletionCallbacks:callbacks];
-    for(RNSpotifyCompletion* completion in completions)
-    {
-        [completion resolve:result];
-    }
-}
-
-
 - (void)sessionManager:(SPTSessionManager *)manager didInitiateSession:(SPTSession *)session
 {
-    [self resolveCompletions:_sessionManagerCallbacks result:session];
+    [RNSpotify resolveCompletions:_sessionManagerCallbacks result:session];
     NSLog(@"Session Initiated");
 //    [self presentAlertControllerWithTitle:@"Authorization Succeeded"
 //                                  message:session.description
@@ -151,7 +159,7 @@ static RNSpotify *sharedInstance = nil;
 
 - (void)sessionManager:(SPTSessionManager *)manager didFailWithError:(NSError *)error
 {
-    [self rejectCompletions:_sessionManagerCallbacks error:[RNSpotifyError errorWithNSError:error]];
+    [RNSpotify rejectCompletions:_sessionManagerCallbacks error:[RNSpotifyError errorWithNSError:error]];
     NSLog(@"Session Manager Failed");
 //    [self presentAlertControllerWithTitle:@"Authorization Failed"
 //                                  message:error.description
@@ -160,11 +168,28 @@ static RNSpotify *sharedInstance = nil;
 
 - (void)sessionManager:(SPTSessionManager *)manager didRenewSession:(SPTSession *)session
 {
-    [self resolveCompletions:_sessionManagerCallbacks result:session];
+    [RNSpotify resolveCompletions:_sessionManagerCallbacks result:session];
     NSLog(@"Session Renewed");
 //    [self presentAlertControllerWithTitle:@"Session Renewed"
 //                                  message:session.description
 //                              buttonTitle:@"Sweet"];
+}
+
+#pragma mark - SPTAppRemoteDelegate implementation
+
+- (void)appRemote:(nonnull SPTAppRemote *)appRemote didDisconnectWithError:(nullable NSError *)error {
+    [RNSpotify rejectCompletions:_appRemoteCallbacks error:[RNSpotifyError errorWithNSError:error]];
+    NSLog(@"App Remote disconnected");
+}
+
+- (void)appRemote:(nonnull SPTAppRemote *)appRemote didFailConnectionAttemptWithError:(nullable NSError *)error {
+    [RNSpotify rejectCompletions:_appRemoteCallbacks error:[RNSpotifyError errorWithNSError:error]];
+    NSLog(@"App Failed To Connect");
+}
+
+- (void)appRemoteDidEstablishConnection:(nonnull SPTAppRemote *)connectedRemote {
+    [RNSpotify resolveCompletions:_appRemoteCallbacks result:_appRemote];
+    NSLog(@"App Remote Connection Initiated");
 }
 
 #pragma mark - React Native functions
@@ -173,12 +198,16 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_METHOD(initializeAsync:(NSDictionary*)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
-    NSLog(@"Initializing things...");
-    if(_initialized)
-    {
-        [RNSpotifyErrorCode.AlreadyInitialized reject:reject];
+    if(_isInitializing){
+        [RNSpotifyErrorCode.IsInitializing reject:reject];
         return;
     }
+    if(_initialized)
+    {
+        resolve(@YES);
+        return;
+    }
+    _isInitializing = YES;
 
     // ensure options is not null or missing fields
     if(options == nil)
@@ -199,51 +228,65 @@ RCT_EXPORT_METHOD(initializeAsync:(NSDictionary*)options resolve:(RCTPromiseReso
     // store the options
     _options = options;
     
-    SPTConfiguration* configuration = [SPTConfiguration configurationWithClientID:options[@"clientID"] redirectURL:[NSURL URLWithString:options[@"redirectURL"]]];
-    
-    // Add swap and refresh urls to config if present
-    if(options[@"tokenSwapURL"] != nil){
-        configuration.tokenSwapURL = [NSURL URLWithString: options[@"tokenSwapURL"]];
-    }
-    
-    if(options[@"tokenRefreshURL"] != nil){
-        configuration.tokenRefreshURL = [NSURL URLWithString: options[@"tokenRefreshURL"]];
-    }
- 
-    // Default Scope
-    SPTScope scope = SPTUserFollowReadScope | SPTAppRemoteControlScope;
-    if(options[@"scope"] != nil){
-        scope = (int)options[@"scope"];
-    }
-    
-    // Allocate our _sessionManager
-    _sessionManager = [SPTSessionManager sessionManagerWithConfiguration:configuration delegate:self];
-    
-
-    [self addCompletion:_sessionManagerCallbacks completion:[RNSpotifyCompletion                                                       onResolve:^(SPTSession *session){
-        self->_appRemote = [[SPTAppRemote alloc] initWithConfiguration:configuration logLevel:SPTAppRemoteLogLevelDebug];
-        self->_appRemote.connectionParameters.accessToken = session.accessToken;
-        [self->_appRemote connect];
-        resolve(@YES);
+    [self initializeSessionManager:options completionCallback:[RNSpotifyCompletion onResolve:^(SPTSession* session) {
+        // Session Manager has succesfully been setup
+        [self initializeAppRemote:session completionCallback:[RNSpotifyCompletion onResolve:^(SPTAppRemote* remote) {
+            // at this point our app remote has been connected resolve our init task
+            self->_isInitializing = NO;
+            self->_initialized = YES;
+            resolve(@YES);
+        } onReject:^(RNSpotifyError *error) {
+            [error reject:reject];
+        }]];
     } onReject:^(RNSpotifyError *error) {
         [error reject:reject];
     }]];
+}
+
+- (void)initializeSessionManager:(NSDictionary*)options completionCallback:(RNSpotifyCompletion*)completion{
+    // Create our configuration object
+    _apiConfiguration = [SPTConfiguration configurationWithClientID:options[@"clientID"] redirectURL:[NSURL URLWithString:options[@"redirectURL"]]];
+    // Add swap and refresh urls to config if present
+    if(options[@"tokenSwapURL"] != nil){
+        _apiConfiguration.tokenSwapURL = [NSURL URLWithString: options[@"tokenSwapURL"]];
+    }
     
+    if(options[@"tokenRefreshURL"] != nil){
+        _apiConfiguration.tokenRefreshURL = [NSURL URLWithString: options[@"tokenRefreshURL"]];
+    }
     
+    // Default Scope
+    SPTScope scope = SPTAppRemoteControlScope | SPTUserFollowReadScope;
+    if(options[@"scope"] != nil){
+        scope = [RCTConvert NSUInteger:options[@"scope"]];
+    }
     
+    // Allocate our _sessionManager using our configuration
+    _sessionManager = [SPTSessionManager sessionManagerWithConfiguration:_apiConfiguration delegate:self];
     
+    // Add our completion callback
+    [_sessionManagerCallbacks addObject:completion];
+    
+    // Initialize the auth flow
     if (@available(iOS 11, *)) {
         // Use this on iOS 11 and above to take advantage of SFAuthenticationSession
         [_sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption];
     } else {
         // todo: figure out the view controller for this
         // Use this on iOS versions < 11 to use SFSafariViewController
-//        [self.sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption presentingViewController:self];
+        //        [self.sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption presentingViewController:self];
     }
-    
-    // done initializing
-    _initialized = YES;
+}
 
+- (void)initializeAppRemote:(SPTSession*)session completionCallback:(RNSpotifyCompletion*)completion{
+    _appRemote = [[SPTAppRemote alloc] initWithConfiguration:_apiConfiguration logLevel:SPTAppRemoteLogLevelDebug];
+    _appRemote.connectionParameters.accessToken = session.accessToken;
+    _appRemote.delegate = self;
+    // Add our callback before we connect
+    [_appRemoteCallbacks addObject:completion];
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [self->_appRemote connect];
+    });
 }
 
 
@@ -270,14 +313,53 @@ RCT_EXPORT_METHOD(getUserAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromis
     );
 }
 
-RCT_EXPORT_METHOD(skipToNextAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    [_appRemote.playerAPI skipToNext:^(id  _Nullable result, NSError * _Nullable error) {
-        if(error != nil){
-            [[RNSpotifyError errorWithNSError:error] reject:reject];
-        }
-        resolve(result);
-    }];
-//    [[RNSpotifyError errorWithCodeObj:RNSpotifyErrorCode.NotImplemented] reject:reject];
+
+RCT_EXPORT_METHOD(resume:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [self->_appRemote.playerAPI resume:^(id  _Nullable result, NSError * _Nullable error) {
+            if(error != nil){
+                [[RNSpotifyError errorWithNSError:error] reject:reject];
+            }else{
+                resolve([NSNull null]);
+            }
+        }];
+    });
+}
+
+RCT_EXPORT_METHOD(pause:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [self->_appRemote.playerAPI pause:^(id  _Nullable result, NSError * _Nullable error) {
+            if(error != nil){
+                [[RNSpotifyError errorWithNSError:error] reject:reject];
+            }else{
+                resolve([NSNull null]);
+            }
+        }];
+    });
+}
+
+RCT_EXPORT_METHOD(skipToNext:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [self->_appRemote.playerAPI skipToNext:^(id  _Nullable result, NSError * _Nullable error) {
+            if(error != nil){
+                [[RNSpotifyError errorWithNSError:error] reject:reject];
+            }else{
+                resolve([NSNull null]);
+            }
+        }];
+    });
+}
+
+RCT_EXPORT_METHOD(skipToPrevious:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [self->_appRemote.playerAPI skipToPrevious:^(id  _Nullable result, NSError * _Nullable error) {
+            if(error != nil){
+                [[RNSpotifyError errorWithNSError:error] reject:reject];
+            }else{
+                resolve([NSNull null]);
+            }
+        }];
+    });
 }
 
 RCT_EXPORT_METHOD(loginAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
@@ -288,6 +370,15 @@ RCT_EXPORT_METHOD(loginAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseR
 {
    return NO;
 }
+
+//RCT_EXPORT_METHOD(sendRequest:(NSString*)endpoint method:(NSString*)method params:(NSDictionary*)params isJSONBody:(BOOL)jsonBody resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+//{
+//    [self doAPIRequest:endpoint method:method params:params jsonBody:jsonBody completion:[RNSpotifyCompletion onReject:^(RNSpotifyError* error) {
+//        [error reject:reject];
+//    } onResolve:^(id result) {
+//        resolve(result);
+//    }]];
+//}
 
 #pragma mark - RNEventConformer Implementation
 

@@ -47,6 +47,7 @@
 		D6F24B832165372500D58B82 /* RNSpotify.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotify.m; sourceTree = "<group>"; };
 		D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyError.m; sourceTree = "<group>"; };
 		D6F24BC321665F4A00D58B82 /* RNSpotifyError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyError.h; sourceTree = "<group>"; };
+		D6F24BD621689F1F00D58B82 /* Macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Macros.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +73,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				D6F24BD621689F1F00D58B82 /* Macros.h */,
 				D6F24B822165372200D58B82 /* RNSpotify.h */,
 				D6F24B832165372500D58B82 /* RNSpotify.m */,
 				D6F24BC321665F4A00D58B82 /* RNSpotifyError.h */,

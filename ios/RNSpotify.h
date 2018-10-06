@@ -29,7 +29,13 @@
 // getUserAsync
 -(void)getUserAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
--(void)skipToNextAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+//-(void)play:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+//-(void)playItem:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)resume:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)pause:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)skipToNext:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)skipToPrevious:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
 
 // loginAsync
 //-(void)loginAsync(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;

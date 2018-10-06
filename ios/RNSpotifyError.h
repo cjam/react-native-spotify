@@ -18,6 +18,7 @@
 #define DECLARE_SPOTIFY_ERROR_CODE(errorName) \
     @property (class, readonly) RNSpotifyErrorCode* errorName;
 
+DECLARE_SPOTIFY_ERROR_CODE(IsInitializing)
 DECLARE_SPOTIFY_ERROR_CODE(AlreadyInitialized)
 DECLARE_SPOTIFY_ERROR_CODE(NotInitialized)
 DECLARE_SPOTIFY_ERROR_CODE(NotImplemented)
