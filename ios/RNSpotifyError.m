@@ -25,6 +25,7 @@
             _RNSpotifyErrorCode##errorName = [RNSpotifyErrorCode codeWithName:@#errorName message:messageStr]; } \
         return _RNSpotifyErrorCode##errorName; } \
 
+DEFINE_SPOTIFY_ERROR_CODE(IsInitializing, @"Spotify connection is initializing")
 DEFINE_SPOTIFY_ERROR_CODE(AlreadyInitialized, @"Spotify has already been initialized")
 DEFINE_SPOTIFY_ERROR_CODE(NotInitialized, @"Spotify has not been initialized")
 DEFINE_SPOTIFY_ERROR_CODE(NotImplemented, @"This feature has not been implemented")
@@ -35,6 +36,7 @@ DEFINE_SPOTIFY_ERROR_CODE(ConflictingCallbacks, @"You cannot call this function 
 DEFINE_SPOTIFY_ERROR_CODE(BadResponse, @"Invalid response format")
 DEFINE_SPOTIFY_ERROR_CODE(PlayerNotReady, @"Player is not ready")
 DEFINE_SPOTIFY_ERROR_CODE(SessionExpired, @"Your login session has expired")
+DEFINE_SPOTIFY_ERROR_CODE(InvalidParameter, @"Invalid Parameter Value")
 
 #undef DEFINE_SPOTIFY_ERROR_CODE
 
@@ -196,8 +198,6 @@ DEFINE_SPOTIFY_ERROR_CODE(SessionExpired, @"Your login session has expired")
 {
     return @{ @"code":_code, @"message":_message };
 }
-
-
 
 +(RNSpotifyError*)nullParameterErrorForName:(NSString*)paramName
 {

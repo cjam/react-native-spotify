@@ -1,11 +1,23 @@
 
 import { NativeModules } from 'react-native';
 import RNEvents from 'react-native-events';
-import SpotifyApi from './SpotifyApi';
-export {default as SpotifyApiConfig} from './SpotifyApiConfig'
-export {default as SpotifyApiScope} from './SpotifyApiScope';
+import { default as SpotifyApi } from './SpotifyApi';
+export { default as SpotifyApiConfig } from './SpotifyApiConfig'
+export { default as SpotifyApiScope } from './SpotifyApiScope';
+export { default as SpotifyRepeatMode } from './SpotifyRepeatMode'
+export { default as SpotifyPlayerState } from './SpotifyPlayerState';
+export { default as Track } from './SpotifyApiTrack';
+export { default as Artist } from './SpotifyApiArtist';
+export { default as Album } from './SpotifyApiAlbum';
 
-const Spotify = NativeModules.RNSpotify as SpotifyApi;
+const SpotifyNative = NativeModules.RNSpotify as SpotifyApi;
+
+SpotifyNative.setPlaying = (playing: boolean) => {
+    // todo: Will want to likely check the state of playing somewhere?
+    // Perhaps this can be done in native land so that we don't need to
+    // worry about it here
+    return playing ? SpotifyNative.resume() : SpotifyNative.pause();
+}
 
 // RNEvents.register(Spotify);
 // RNEvents.conform(Spotify);
@@ -35,7 +47,7 @@ const Spotify = NativeModules.RNSpotify as SpotifyApi;
 // 	var body = Object.assign({}, options);
 // 	body['q'] = query;
 // 	body['type'] = types.join(',');
-	
+
 // 	return sendRequest('v1/search', 'GET', body, false);
 // }
 
@@ -51,7 +63,7 @@ const Spotify = NativeModules.RNSpotify as SpotifyApi;
 // 	{
 // 		return Promise.reject(new Error("albumID cannot be null"));
 // 	}
-	
+
 // 	return sendRequest('v1/albums/'+albumID, 'GET', options, false);
 // }
 
@@ -129,7 +141,7 @@ const Spotify = NativeModules.RNSpotify as SpotifyApi;
 // 	{
 // 		return Promise.reject(new Error("artistID cannot be null"));
 // 	}
-	
+
 // 	return sendRequest('v1/artists/'+artistID+'/related-artists', 'GET', options, false);
 // }
 
@@ -186,4 +198,4 @@ const Spotify = NativeModules.RNSpotify as SpotifyApi;
 // 	return sendRequest('v1/audio-features', 'GET', body, false);
 // }
 
-export default Spotify;
+export default SpotifyNative as SpotifyApi;
