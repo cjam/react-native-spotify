@@ -1,5 +1,5 @@
 
-import { NativeModules } from 'react-native';
+import { NativeModules, Alert } from 'react-native';
 import RNEvents from 'react-native-events';
 import { default as SpotifyApi } from './SpotifyApi';
 export { default as SpotifyApiConfig } from './SpotifyApiConfig'
@@ -9,6 +9,8 @@ export { default as SpotifyPlayerState } from './SpotifyPlayerState';
 export { default as Track } from './SpotifyApiTrack';
 export { default as Artist } from './SpotifyApiArtist';
 export { default as Album } from './SpotifyApiAlbum';
+export { default as SpotifyContentType } from './SpotifyContentType';
+export { default as SpotifyContentItem } from './SpotifyContentItem';
 
 const SpotifyNative = NativeModules.RNSpotify as SpotifyApi;
 
@@ -19,8 +21,37 @@ SpotifyNative.setPlaying = (playing: boolean) => {
     return playing ? SpotifyNative.resume() : SpotifyNative.pause();
 }
 
-// RNEvents.register(Spotify);
-// RNEvents.conform(Spotify);
+RNEvents.register(SpotifyNative);
+RNEvents.conform(SpotifyNative);
+
+// The events produced by the eventEmitter implementation around 
+// when new event listeners are added and removed
+const metaEvents = {
+    newListener: 'newListener',
+    removeListener: 'removeListener'
+};
+
+// Want to ignore the metaEvents when sending our subscription events
+const ignoredEvents = Object.keys(metaEvents);
+
+(SpotifyNative as any).on(metaEvents.newListener, (type: string) => {
+    if (ignoredEvents.indexOf(type) === -1) {
+        const listenerCount = SpotifyNative.listenerCount(type as any);
+        // If this is the first listener, send an eventSubscribed event
+        if (listenerCount == 0) {
+            RNEvents.emitNativeEvent(SpotifyNative, "eventSubscribed", type);
+        }
+    }
+}).on(metaEvents.removeListener, (type: string) => {
+    if (ignoredEvents.indexOf(type) === -1) {
+        const listenerCount = SpotifyNative.listenerCount(type as any);
+        if (listenerCount == 0) {
+            RNEvents.emitNativeEvent(SpotifyNative, "eventUnsubscribed", type);
+        }
+    }
+});
+
+
 
 // const sendRequest = Spotify.sendRequest;
 
@@ -198,4 +229,4 @@ SpotifyNative.setPlaying = (playing: boolean) => {
 // 	return sendRequest('v1/audio-features', 'GET', body, false);
 // }
 
-export default SpotifyNative as SpotifyApi;
+export default SpotifyNative;

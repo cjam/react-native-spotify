@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		D658F0DF2164059C004649AB /* SpotifyiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D658F0DE2164059C004649AB /* SpotifyiOS.framework */; };
 		D67AF66E216D18E900859404 /* RNSpotifyConvert.m in Sources */ = {isa = PBXBuildFile; fileRef = A00A83BC1FB5188A00394AF0 /* RNSpotifyConvert.m */; };
+		D67AF673216E725000859404 /* RNSpotifySubscriptionCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = D67AF672216E725000859404 /* RNSpotifySubscriptionCallback.m */; };
+		D67AF675216EC14700859404 /* RNSpotifyItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D67AF674216EC14700859404 /* RNSpotifyItem.m */; };
+		D67AF679216F9D8C00859404 /* NSArrayExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = D67AF678216F9D8C00859404 /* NSArrayExtensions.m */; };
 		D6F24B8421653FAC00D58B82 /* RNSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = D6F24B832165372500D58B82 /* RNSpotify.m */; };
 		D6F24BC421665F4A00D58B82 /* RNSpotifyError.m in Sources */ = {isa = PBXBuildFile; fileRef = D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */; };
 		D6F24BD5216685B000D58B82 /* RNSpotifyCompletion.m in Sources */ = {isa = PBXBuildFile; fileRef = A0C233712036800A0063A745 /* RNSpotifyCompletion.m */; };
@@ -46,6 +49,12 @@
 		D658F0DE2164059C004649AB /* SpotifyiOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpotifyiOS.framework; path = external/SpotifySDK/SpotifyiOS.framework; sourceTree = "<group>"; };
 		D67AF66F216D191100859404 /* RNSpotifyConvert.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyConvert.m; sourceTree = "<group>"; };
 		D67AF670216D191100859404 /* RNSpotifyConvert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyConvert.h; sourceTree = "<group>"; };
+		D67AF671216E722E00859404 /* RNSpotifySubscriptionCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifySubscriptionCallback.h; sourceTree = "<group>"; };
+		D67AF672216E725000859404 /* RNSpotifySubscriptionCallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifySubscriptionCallback.m; sourceTree = "<group>"; };
+		D67AF674216EC14700859404 /* RNSpotifyItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyItem.m; sourceTree = "<group>"; };
+		D67AF676216EC15000859404 /* RNSpotifyItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyItem.h; sourceTree = "<group>"; };
+		D67AF677216F9D7D00859404 /* NSArrayExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSArrayExtensions.h; sourceTree = "<group>"; };
+		D67AF678216F9D8C00859404 /* NSArrayExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSArrayExtensions.m; sourceTree = "<group>"; };
 		D6F24B822165372200D58B82 /* RNSpotify.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotify.h; sourceTree = "<group>"; };
 		D6F24B832165372500D58B82 /* RNSpotify.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotify.m; sourceTree = "<group>"; };
 		D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyError.m; sourceTree = "<group>"; };
@@ -76,6 +85,12 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				D67AF678216F9D8C00859404 /* NSArrayExtensions.m */,
+				D67AF677216F9D7D00859404 /* NSArrayExtensions.h */,
+				D67AF676216EC15000859404 /* RNSpotifyItem.h */,
+				D67AF674216EC14700859404 /* RNSpotifyItem.m */,
+				D67AF671216E722E00859404 /* RNSpotifySubscriptionCallback.h */,
+				D67AF672216E725000859404 /* RNSpotifySubscriptionCallback.m */,
 				D6F24BD621689F1F00D58B82 /* Macros.h */,
 				D6F24B822165372200D58B82 /* RNSpotify.h */,
 				D6F24B832165372500D58B82 /* RNSpotify.m */,
@@ -179,6 +194,9 @@
 				D6F24BD5216685B000D58B82 /* RNSpotifyCompletion.m in Sources */,
 				D6F24B8421653FAC00D58B82 /* RNSpotify.m in Sources */,
 				D6F24BC421665F4A00D58B82 /* RNSpotifyError.m in Sources */,
+				D67AF673216E725000859404 /* RNSpotifySubscriptionCallback.m in Sources */,
+				D67AF679216F9D8C00859404 /* NSArrayExtensions.m in Sources */,
+				D67AF675216EC14700859404 /* RNSpotifyItem.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

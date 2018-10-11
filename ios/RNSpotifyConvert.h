@@ -17,9 +17,7 @@
 +(id)SPTAppRemoteTrack:(NSObject<SPTAppRemoteTrack> *) track;
 +(id)SPTAppRemoteArtist:(NSObject<SPTAppRemoteArtist> *) artist;
 +(id)SPTAppRemoteAlbum:(NSObject<SPTAppRemoteAlbum> *) album;
-//+(id)SPTPlaybackState:(SPTPlaybackState*)state;
-//+(id)SPTPlaybackTrack:(SPTPlaybackTrack*)track;
-//+(id)SPTPlaybackMetadata:(SPTPlaybackMetadata*)metadata;
-//+(id)SPTAuth:(SPTAuth*)auth;
++(id)SPTAppRemoteContentItem:(NSObject<SPTAppRemoteContentItem> *) item;
++(id)SPTAppRemoteContentItems:(NSArray *) items;
 
 @end

@@ -1,5 +1,7 @@
 import SpotifyPlayerState from './SpotifyPlayerState';
 
 export default interface SpotifyApiEvents {
-    "playerStateChanged": SpotifyPlayerState,
+    "playerStateChanged": SpotifyPlayerState;
+    "remoteDisconnected": void;
+    "remoteConnected": void;
 }

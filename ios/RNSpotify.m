@@ -2,33 +2,33 @@
 #import "RNSpotify.h"
 #import <AVFoundation/AVFoundation.h>
 #import <React/RCTConvert.h>
-//#import <SpotifyiOS/SpotifyiOS.h>
-//#import <SpotifyAuthentication/SpotifyAuthentication.h>
-//#import <SpotifyMetadata/SpotifyMetadata.h>
-//#import <SpotifyAudioPlayback/SpotifyAudioPlayback.h>
 #import <SpotifyiOS.h>
-//#import "RNSpotifyAuthController.h"
-//#import "RNSpotifyProgressView.h"
 #import "RNSpotifyConvert.h"
-//#import "RNSpotifyCompletion.h"
-//#import "HelperMacros.h"
+#import "RNSpotifyItem.h"
 #import "RNSpotifyError.h"
 #import "RNSpotifyCompletion.h"
+#import "RNSpotifySubscriptionCallback.h"
 #define SPOTIFY_API_BASE_URL @"https://api.spotify.com/"
 #define SPOTIFY_API_URL(endpoint) [NSURL URLWithString:NSString_concat(SPOTIFY_API_BASE_URL, endpoint)]
 
+static NSString * const EventNamePlayerStateChanged = @"playerStateChanged";
+static NSString * const EventNameRemoteDisconnected = @"remoteDisconnected";
+static NSString * const EventNameRemoteConnected = @"remoteConnected";
 
 // Static Singleton instance
 static RNSpotify *sharedInstance = nil;
 
-@interface RNSpotify() <SPTSessionManagerDelegate,SPTAppRemoteDelegate>
+@interface RNSpotify() <SPTSessionManagerDelegate,SPTAppRemoteDelegate,SPTAppRemotePlayerStateDelegate>
 {
     BOOL _initialized;
     BOOL _isInitializing;
+    BOOL _isRemoteConnected;
     NSDictionary* _options;
     
     NSMutableArray<RNSpotifyCompletion*>* _sessionManagerCallbacks;
     NSMutableArray<RNSpotifyCompletion*>* _appRemoteCallbacks;
+    NSMutableDictionary<NSString*,NSNumber*>* _eventSubscriptions;
+    NSDictionary<NSString*,RNSpotifySubscriptionCallback*>* _eventSubscriptionCallbacks;
     
     SPTConfiguration *_apiConfiguration;
     SPTSessionManager *_sessionManager;
@@ -36,6 +36,7 @@ static RNSpotify *sharedInstance = nil;
 }
 - (void)initializeSessionManager:(NSDictionary*)options completionCallback:(RNSpotifyCompletion*)completion;
 - (void)initializeAppRemote:(SPTSession*)session completionCallback:(RNSpotifyCompletion*)completion;
+- (void)handleEventSubscriptions;
 @end
 
 @implementation RNSpotify
@@ -61,11 +62,15 @@ static RNSpotify *sharedInstance = nil;
         {
             NSLog(@"RNSpotify Initialized");
             _initialized = NO;
+            _isInitializing = NO;
+            _isRemoteConnected = NO;
             _sessionManagerCallbacks = [NSMutableArray array];
             _appRemoteCallbacks = [NSMutableArray array];
             _apiConfiguration = nil;
             _sessionManager = nil;
             _appRemote = nil;
+            _eventSubscriptions = @{}.mutableCopy;
+            _eventSubscriptionCallbacks = [self initializeEventSubscribers];
         }
         
         static dispatch_once_t once;
@@ -77,6 +82,39 @@ static RNSpotify *sharedInstance = nil;
         NSLog(@"Returning shared instance");
     }
     return sharedInstance;
+}
+
+- (NSDictionary*)initializeEventSubscribers{
+    return @{
+      EventNamePlayerStateChanged: [RNSpotifySubscriptionCallback subscriber:^{
+          if(self->_appRemote != nil && self->_appRemote.playerAPI != nil){
+              self->_appRemote.playerAPI.delegate = self;
+              RCTExecuteOnMainQueue(^{
+                  [self->_appRemote.playerAPI subscribeToPlayerState:^(id  _Nullable result, NSError * _Nullable error) {
+                      // todo: figure out what to do if there is an error
+                      if(error != nil){
+                          NSLog(@"Couldn't Subscribe from PlayerStateChanges");
+                      }else{
+                          NSLog(@"Subscribed to PlayerStateChanges");
+                      }
+                  }];
+              });
+          }
+      } unsubscriber:^{
+          if(self->_appRemote != nil && self->_appRemote.playerAPI != nil){
+              RCTExecuteOnMainQueue(^{
+                  [self->_appRemote.playerAPI unsubscribeToPlayerState:^(id  _Nullable result, NSError * _Nullable error) {
+                      // todo: figure out what to do if there is an error
+                      if(error != nil){
+                          NSLog(@"Couldn't Unsubscribe from PlayerStateChanges");
+                      }else{
+                          NSLog(@"Unsubscribed to PlayerStateChanges");
+                      }
+                  }];
+              });
+          }
+      }]
+    };
 }
 
 #pragma mark - Utilities
@@ -175,21 +213,32 @@ static RNSpotify *sharedInstance = nil;
 //                              buttonTitle:@"Sweet"];
 }
 
+#pragma mark - SPTAppRemotePlayerStateDelegate implementation
+
+- (void)playerStateDidChange:(nonnull id<SPTAppRemotePlayerState>)playerState {
+    [self sendEvent:EventNamePlayerStateChanged args:@[
+        [RNSpotifyConvert SPTAppRemotePlayerState:playerState]
+        ]
+    ];
+}
+
 #pragma mark - SPTAppRemoteDelegate implementation
 
 - (void)appRemote:(nonnull SPTAppRemote *)appRemote didDisconnectWithError:(nullable NSError *)error {
     [RNSpotify rejectCompletions:_appRemoteCallbacks error:[RNSpotifyError errorWithNSError:error]];
     NSLog(@"App Remote disconnected");
+    [self sendEvent:EventNameRemoteDisconnected args:@[]];
 }
 
 - (void)appRemote:(nonnull SPTAppRemote *)appRemote didFailConnectionAttemptWithError:(nullable NSError *)error {
     [RNSpotify rejectCompletions:_appRemoteCallbacks error:[RNSpotifyError errorWithNSError:error]];
-    NSLog(@"App Failed To Connect");
+    NSLog(@"App Failed To Connect to Spotify");
 }
 
 - (void)appRemoteDidEstablishConnection:(nonnull SPTAppRemote *)connectedRemote {
     [RNSpotify resolveCompletions:_appRemoteCallbacks result:_appRemote];
     NSLog(@"App Remote Connection Initiated");
+    [self sendEvent:EventNameRemoteConnected args:@[]];
 }
 
 #pragma mark - React Native functions
@@ -234,11 +283,16 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
             // at this point our app remote has been connected resolve our init task
             self->_isInitializing = NO;
             self->_initialized = YES;
+            // Since we don't know when people will subscribe to events, we need
+            // to handle any subscriptions after we're done initializing
+            [self handleEventSubscriptions];
             resolve(@YES);
         } onReject:^(RNSpotifyError *error) {
+            self->_isInitializing=NO;
             [error reject:reject];
         }]];
     } onReject:^(RNSpotifyError *error) {
+        self->_isInitializing=NO;
         [error reject:reject];
     }]];
 }
@@ -269,8 +323,10 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
     
     // Initialize the auth flow
     if (@available(iOS 11, *)) {
-        // Use this on iOS 11 and above to take advantage of SFAuthenticationSession
-        [_sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption];
+        RCTExecuteOnMainQueue(^{
+            // Use this on iOS 11 and above to take advantage of SFAuthenticationSession
+            [self->_sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption];
+        });
     } else {
         // todo: figure out the view controller for this
         // Use this on iOS versions < 11 to use SFSafariViewController
@@ -301,6 +357,9 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
     };
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(isConnected){
+    return (_appRemote != nil && _appRemote.isConnected) ? @YES : @NO;
+}
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(isInitialized){
     if(!_initialized){
@@ -386,9 +445,63 @@ RCT_EXPORT_METHOD(getPlayerState:(RCTPromiseResolveBlock)resolve reject:(RCTProm
     });
 }
 
+
+
+RCT_EXPORT_METHOD(getRecommendedContentItems:(NSUInteger) typeVal resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    SPTAppRemoteContentType contentType = typeVal;
+    RCTExecuteOnMainQueue(^{
+        if(self->_appRemote != nil && self->_appRemote.contentAPI != nil){
+            [self->_appRemote.contentAPI fetchRecommendedContentItemsForType:contentType
+                callback:^(NSArray* _Nullable result, NSError * _Nullable error){
+                   if(error != nil){
+                       [[RNSpotifyError errorWithNSError:error] reject:reject];
+                   }else{
+                       resolve([RNSpotifyConvert SPTAppRemoteContentItems:result]);
+                   }
+               }
+             ];
+        }
+    });
+}
+
+RCT_EXPORT_METHOD(getChildrenOfItem:(NSDictionary*)item resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    RNSpotifyItem* spotifyItem = [RNSpotifyItem fromJSON:item];
+    RCTExecuteOnMainQueue(^{
+        if(self->_appRemote != nil && self->_appRemote.contentAPI != nil){
+            [self->_appRemote.contentAPI fetchChildrenOfContentItem:spotifyItem
+                callback:^(NSArray* _Nullable result, NSError * _Nullable error){
+                    if(error != nil){
+                        [[RNSpotifyError errorWithNSError:error] reject:reject];
+                    }else{
+                        resolve([RNSpotifyConvert SPTAppRemoteContentItems:result]);
+                    }
+                }
+            ];
+        }
+    });
+}
+
+
 +(BOOL)requiresMainQueueSetup
 {
    return NO;
+}
+
+-(void)handleEventSubscriptions{
+    [_eventSubscriptions enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSNumber * _Nonnull value, BOOL * _Nonnull stop) {
+        RNSpotifySubscriptionCallback* callback = self->_eventSubscriptionCallbacks[key];
+        BOOL shouldSubscribe = [value boolValue];
+        
+        // If a callback has been registered for this event then use it
+        // Note: the callback structure makes sure to only subscribe/unsubscribe once
+        if(callback != nil){
+            if(shouldSubscribe == YES){
+                [callback subscribe];
+            }else if(shouldSubscribe == NO){
+                [callback unSubscribe];
+            }
+        }
+    }];
 }
 
 #pragma mark - RNEventConformer Implementation
@@ -401,6 +514,22 @@ RCT_EXPORT_METHOD(__registerAsJSEventEmitter:(int)moduleId)
 -(void)sendEvent:(NSString*)event args:(NSArray*)args
 {
     [RNEventEmitter emitEvent:event withParams:args module:self bridge:_bridge];
+}
+
+-(void)onJSEvent:(NSString*)eventName params:(NSArray*)params{
+    if([eventName isEqualToString:@"eventSubscribed"]){
+        NSString * eventType = params[0];
+        if(eventType != nil){
+            [_eventSubscriptions setValue:@YES forKey:eventType];
+        }
+        [self handleEventSubscriptions];
+    }else if([eventName isEqualToString:@"eventUnsubscribed"]){
+        NSString * eventType = params[0];
+        if(eventType != nil){
+            [_eventSubscriptions setValue:@NO forKey:eventType];
+        }
+        [self handleEventSubscriptions];
+    }
 }
 
 @end

@@ -2,6 +2,8 @@ import SpotifyApiConfig from './SpotifyApiConfig';
 import SpotifyApiEvents from './SpotifyApiEvents';
 import SpotifyPlayerState from './SpotifyPlayerState';
 import SpotifyRepeatMode from './SpotifyRepeatMode';
+import SpotifyContentType from './SpotifyContentType';
+import SpotifyContentItem from './SpotifyContentItem';
 
 export interface SpotifyEventEmitter{
     on<K extends keyof SpotifyApiEvents>(name:K,listener:(v:SpotifyApiEvents[K])=>void) : this;
@@ -23,6 +25,7 @@ export interface SpotifyEventEmitter{
 
 export interface SpotifyNativeApi extends SpotifyEventEmitter {
     isInitialized(): boolean;
+    isConnected():boolean;
     initialize(config: SpotifyApiConfig): Promise<void>;
     
     /**
@@ -51,6 +54,8 @@ export interface SpotifyNativeApi extends SpotifyEventEmitter {
     setShuffling(shuffling:boolean):Promise<void>;
     setRepeatMode(mode:SpotifyRepeatMode):Promise<void>;
     getPlayerState():Promise<SpotifyPlayerState>;
+    getRecommendedContentItems(type:SpotifyContentType):Promise<SpotifyContentItem[]>;
+    getChildrenOfItem(item:Pick<SpotifyContentItem,'uri'|'id'>):Promise<SpotifyContentItem[]>;
 }
 
 interface SpotifyJSApi {
