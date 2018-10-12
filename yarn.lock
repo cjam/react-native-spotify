@@ -207,9 +207,9 @@ progress@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f"
 
-react-native-events@~1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/react-native-events/-/react-native-events-1.0.7.tgz#6870140cc9f33eabe68512840b444c87a564b362"
+react-native-events@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/react-native-events/-/react-native-events-1.0.9.tgz#696cbae2e5300378b382d67d7b31f88270ad16ce"
   dependencies:
     events "^1.1.1"
 
