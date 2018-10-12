@@ -4,6 +4,7 @@ import SpotifyPlayerState from './SpotifyPlayerState';
 import SpotifyRepeatMode from './SpotifyRepeatMode';
 import SpotifyContentType from './SpotifyContentType';
 import SpotifyContentItem from './SpotifyContentItem';
+import TypedEventEmitter from './TypedEventEmitter';
 
 /**
  * SpotifyNative Event Emitter, emitting events of type {@link SpotifyApiEvents}
@@ -11,23 +12,27 @@ import SpotifyContentItem from './SpotifyContentItem';
  * @export
  * @interface SpotifyEventEmitter
  */
-export interface SpotifyEventEmitter {
-    on<K extends keyof SpotifyApiEvents>(name: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    addListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    once<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    prependListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    prependOnceListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    removeListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    off<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-    removeAllListeners<K extends keyof SpotifyApiEvents>(event?: K): this;
-    setMaxListeners(n: number): this;
-    getMaxListeners(): number;
-    listeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
-    rawListeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
-    emit<K extends keyof SpotifyApiEvents>(event: K, args: SpotifyApiEvents[K]): boolean;
-    eventNames<K extends keyof SpotifyApiEvents>(): Array<K>;
-    listenerCount<K extends keyof SpotifyApiEvents>(type: K): number;
+interface SpotifyEventEmitter extends TypedEventEmitter<SpotifyApiEvents>{
+
 }
+
+//  export interface SpotifyEventEmitter {
+//     on<K extends keyof SpotifyApiEvents>(name: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     addListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     once<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     prependListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     prependOnceListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     removeListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     off<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
+//     removeAllListeners<K extends keyof SpotifyApiEvents>(event?: K): this;
+//     setMaxListeners(n: number): this;
+//     getMaxListeners(): number;
+//     listeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
+//     rawListeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
+//     emit<K extends keyof SpotifyApiEvents>(event: K, args: SpotifyApiEvents[K]): boolean;
+//     eventNames<K extends keyof SpotifyApiEvents>(): Array<K>;
+//     listenerCount<K extends keyof SpotifyApiEvents>(type: K): number;
+// }
 
 
 /**
