@@ -321,6 +321,10 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
     // Add our completion callback
     [_sessionManagerCallbacks addObject:completion];
     
+    
+    // For debugging..
+//    _sessionManager.alwaysShowAuthorizationDialog = YES;
+    
     // Initialize the auth flow
     if (@available(iOS 11, *)) {
         RCTExecuteOnMainQueue(^{
@@ -328,11 +332,12 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
             [self->_sessionManager initiateSessionWithScope:scope options:SPTDefaultAuthorizationOption];
         });
     } else {
-        // todo: figure out the view controller for this
-        // Use this on iOS versions < 11 to use SFSafariViewController
-        [_sessionManager initiateSessionWithScope:scope
-                                          options:SPTDefaultAuthorizationOption
-                         presentingViewController:[UIApplication sharedApplication].keyWindow.rootViewController];
+        RCTExecuteOnMainQueue(^{
+            // Use this on iOS versions < 11 to use SFSafariViewController
+            [self->_sessionManager initiateSessionWithScope:scope
+                                                    options:SPTDefaultAuthorizationOption
+                                   presentingViewController:[UIApplication sharedApplication].keyWindow.rootViewController];
+        });
     }
 }
 
