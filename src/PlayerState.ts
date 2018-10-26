@@ -1,8 +1,8 @@
 import  PlaybackOptions from './PlaybackOptions';
 import  PlaybackRestrictions from './PlaybackRestrictions';
-import Track from './SpotifyApiTrack';
+import Track from './Track';
 
-export default interface SpotifyPlayerState {
+export default interface PlayerState {
     track: Track;
     playbackPosition: any;
     playbackSpeed: any;

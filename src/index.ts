@@ -1,58 +1,17 @@
+// Types
+export { default as ApiConfig } from './ApiConfig'
+export { default as ApiScope } from './ApiScope';
+export { default as RepeatMode } from './RepeatMode'
+export { default as PlayerState } from './PlayerState';
+export { default as Track } from './Track';
+export { default as Artist } from './Artist';
+export { default as Album } from './Album';
+export { default as ContentType } from './ContentType';
+export { default as ContentItem } from './ContentItem';
 
-import { NativeModules, Alert } from 'react-native';
-import RNEvents from 'react-native-events';
-import { default as SpotifyApi } from './SpotifyApi';
-export { default as SpotifyApi} from './SpotifyApi';
-export { default as SpotifyApiConfig } from './SpotifyApiConfig'
-export { default as SpotifyApiScope } from './SpotifyApiScope';
-export { default as SpotifyRepeatMode } from './SpotifyRepeatMode'
-export { default as SpotifyPlayerState } from './SpotifyPlayerState';
-export { default as Track } from './SpotifyApiTrack';
-export { default as Artist } from './SpotifyApiArtist';
-export { default as Album } from './SpotifyApiAlbum';
-export { default as SpotifyContentType } from './SpotifyContentType';
-export { default as SpotifyContentItem } from './SpotifyContentItem';
-
-const SpotifyNative = NativeModules.RNSpotify as SpotifyApi;
-
-SpotifyNative.setPlaying = (playing: boolean) => {
-    // todo: Will want to likely check the state of playing somewhere?
-    // Perhaps this can be done in native land so that we don't need to
-    // worry about it here
-    return playing ? SpotifyNative.resume() : SpotifyNative.pause();
-}
-
-RNEvents.register(SpotifyNative);
-RNEvents.conform(SpotifyNative);
-
-// The events produced by the eventEmitter implementation around 
-// when new event listeners are added and removed
-const metaEvents = {
-    newListener: 'newListener',
-    removeListener: 'removeListener'
-};
-
-// Want to ignore the metaEvents when sending our subscription events
-const ignoredEvents = Object.keys(metaEvents);
-
-(SpotifyNative as any).on(metaEvents.newListener, (type: string) => {
-    if (ignoredEvents.indexOf(type) === -1) {
-        const listenerCount = SpotifyNative.listenerCount(type as any);
-        // If this is the first listener, send an eventSubscribed event
-        if (listenerCount == 0) {
-            RNEvents.emitNativeEvent(SpotifyNative, "eventSubscribed", type);
-        }
-    }
-}).on(metaEvents.removeListener, (type: string) => {
-    if (ignoredEvents.indexOf(type) === -1) {
-        const listenerCount = SpotifyNative.listenerCount(type as any);
-        if (listenerCount == 0) {
-            RNEvents.emitNativeEvent(SpotifyNative, "eventUnsubscribed", type);
-        }
-    }
-});
-
-
+// Modules
+export { default as auth} from './SpotifyAuth';
+export {default as remote, SpotifyRemoteApi} from './SpotifyRemote';
 
 // const sendRequest = Spotify.sendRequest;
 
@@ -229,5 +188,3 @@ const ignoredEvents = Object.keys(metaEvents);
 
 // 	return sendRequest('v1/audio-features', 'GET', body, false);
 // }
-
-export default SpotifyNative;

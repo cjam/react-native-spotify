@@ -1,5 +1,5 @@
-import Artist from './SpotifyApiArtist';
-import Album from './SpotifyApiAlbum';
+import Artist from './Artist';
+import Album from './Album';
 
 export default interface Track{
     name:string;

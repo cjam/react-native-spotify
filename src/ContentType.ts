@@ -1,5 +1,5 @@
 
-enum SpotifyContentType{
+enum ContentType{
     
     /**
      * The default type.
@@ -17,4 +17,4 @@ enum SpotifyContentType{
     Fitness = 2
 }
 
-export default SpotifyContentType;
+export default ContentType;

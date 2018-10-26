@@ -1,4 +1,4 @@
-import SpotifyScope from './SpotifyApiScope';
+import ApiScope from './ApiScope';
 
 export default interface SpotifyApiConfig {
     clientID:string;
@@ -6,5 +6,5 @@ export default interface SpotifyApiConfig {
     tokenSwapURL?:string;
     tokenRefreshURL?:string;
     playURI?:string;
-    scope?:SpotifyScope;
+    scope?:ApiScope;
 }

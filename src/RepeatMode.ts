@@ -1,4 +1,4 @@
-enum SpotifyRepeatMode {
+enum RepeatMode {
     /**
      * Repeat is off.
      */
@@ -13,4 +13,4 @@ enum SpotifyRepeatMode {
     Context=2
 }
 
-export default SpotifyRepeatMode;
+export default RepeatMode;

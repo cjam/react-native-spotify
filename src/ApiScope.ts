@@ -1,4 +1,4 @@
-enum SpotifyApiScope {
+enum ApiScope {
     
     /**
      * Read access to user’s private playlists.
@@ -78,4 +78,4 @@ enum SpotifyApiScope {
     UserReadRecentlyPlayedScope = 1 << 18,
 }
 
-export default SpotifyApiScope;
+export default ApiScope;

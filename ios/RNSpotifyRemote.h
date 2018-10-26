@@ -11,23 +11,14 @@
 #import <RNEventEmitter/RNEventEmitter.h>
 #endif
 
-@interface RNSpotify : NSObject <RCTBridgeModule, RNEventConformer>
-
--(BOOL)application:(UIApplication *)application openURL:(NSURL *)URL options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options;
-
-+(instancetype)sharedInstance;
+@interface RNSpotifyRemote : NSObject <RCTBridgeModule, RNEventConformer>
 
 // isInitialized
 -(id)isInitialized;
 
--(id)isConnected;
-
 -(void)isConnectedAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
--(void)connect:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
-
-// initialize(options)
--(void)initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+-(void)connect:(NSString*)accessToken resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 // Playback API
 -(void)playUri:(NSString*)uri resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;

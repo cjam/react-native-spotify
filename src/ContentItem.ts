@@ -1,4 +1,4 @@
-export default interface SpotifyContentItem{
+export default interface ContentItem{
     /**
      * The primary title of the item.
      *

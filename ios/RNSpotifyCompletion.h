@@ -21,4 +21,10 @@
 +(RNSpotifyCompletion*)onReject:(void(^)(RNSpotifyError* error))onReject onResolve:(void(^)(ObjectType result))onResolve;
 +(RNSpotifyCompletion*)onComplete:(void(^)(ObjectType result, RNSpotifyError* error))onComplete;
 
++ (NSArray<RNSpotifyCompletion*>*)popCompletionCallbacks:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray;
+
++ (void)rejectCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks error:(RNSpotifyError*) error;
+
++ (void)resolveCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks result:(id) result;
+
 @end

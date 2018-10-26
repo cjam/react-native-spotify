@@ -92,4 +92,26 @@
     return [[self alloc] initWithOnComplete:onComplete];
 }
 
++ (NSArray<RNSpotifyCompletion*>*)popCompletionCallbacks:(NSMutableArray<RNSpotifyCompletion*>*)callbackArray{
+    NSArray<RNSpotifyCompletion*>* callbacks = [NSArray arrayWithArray:callbackArray];
+    [callbackArray removeAllObjects];
+    return callbacks;
+}
+
++ (void)rejectCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks error:(RNSpotifyError*) error{
+    NSArray<RNSpotifyCompletion*>* completions = [RNSpotifyCompletion popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion reject:error];
+    }
+}
+
++ (void)resolveCompletions:(NSMutableArray<RNSpotifyCompletion*>*)callbacks result:(id) result{
+    NSArray<RNSpotifyCompletion*>* completions = [RNSpotifyCompletion popCompletionCallbacks:callbacks];
+    for(RNSpotifyCompletion* completion in completions)
+    {
+        [completion resolve:result];
+    }
+}
+
 @end
