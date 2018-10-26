@@ -342,7 +342,7 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
 }
 
 - (void)initializeAppRemote:(SPTSession*)session completionCallback:(RNSpotifyCompletion*)completion{
-    _appRemote = [[SPTAppRemote alloc] initWithConfiguration:_apiConfiguration logLevel:SPTAppRemoteLogLevelInfo];
+    _appRemote = [[SPTAppRemote alloc] initWithConfiguration:_apiConfiguration logLevel:SPTAppRemoteLogLevelDebug];
     _appRemote.connectionParameters.accessToken = session.accessToken;
     _appRemote.delegate = self;
     // Add our callback before we connect
@@ -362,6 +362,32 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBl
     };
 }
 
+RCT_EXPORT_METHOD(isConnectedAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    RCTExecuteOnMainQueue(^{
+        BOOL isRemoteConnected = self->_appRemote != nil && self->_appRemote.isConnected;
+        if(isRemoteConnected){
+            resolve(@YES);
+        }else{
+            resolve(@NO);
+        }
+    });
+}
+
+RCT_EXPORT_METHOD(connect:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    RNSpotifyCompletion* completion = [RNSpotifyCompletion onResolve:resolve onReject:^(RNSpotifyError *error) {
+        [error reject:reject];
+    }];
+    if(_isInitializing){
+        [_appRemoteCallbacks addObject:completion];
+    }else{
+        if(_appRemote != nil && _appRemote.isConnected){
+            resolve(@YES);
+        }else{
+            [self initializeAppRemote:[_sessionManager session] completionCallback:completion];
+        }
+    }
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(isConnected){
     return (_appRemote != nil && _appRemote.isConnected) ? @YES : @NO;
 }
@@ -375,7 +401,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(isInitialized){
 }
 
 RCT_EXPORT_METHOD(playUri:(NSString*)uri resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    dispatch_async(dispatch_get_main_queue(), ^(void){
+    RCTExecuteOnMainQueue(^{
         [self->_appRemote.playerAPI play:uri callback:[RNSpotify defaultSpotifyRemoteCallback:resolve reject:reject]];
     });
 }

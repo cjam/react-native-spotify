@@ -2,6 +2,7 @@
 import { NativeModules, Alert } from 'react-native';
 import RNEvents from 'react-native-events';
 import { default as SpotifyApi } from './SpotifyApi';
+export { default as SpotifyApi} from './SpotifyApi';
 export { default as SpotifyApiConfig } from './SpotifyApiConfig'
 export { default as SpotifyApiScope } from './SpotifyApiScope';
 export { default as SpotifyRepeatMode } from './SpotifyRepeatMode'

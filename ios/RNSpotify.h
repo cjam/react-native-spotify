@@ -22,6 +22,10 @@
 
 -(id)isConnected;
 
+-(void)isConnectedAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
+-(void)connect:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
 // initialize(options)
 -(void)initialize:(NSDictionary*)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 

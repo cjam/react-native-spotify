@@ -16,25 +16,6 @@ interface SpotifyEventEmitter extends TypedEventEmitter<SpotifyApiEvents>{
 
 }
 
-//  export interface SpotifyEventEmitter {
-//     on<K extends keyof SpotifyApiEvents>(name: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     addListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     once<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     prependListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     prependOnceListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     removeListener<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     off<K extends keyof SpotifyApiEvents>(event: K, listener: (v: SpotifyApiEvents[K]) => void): this;
-//     removeAllListeners<K extends keyof SpotifyApiEvents>(event?: K): this;
-//     setMaxListeners(n: number): this;
-//     getMaxListeners(): number;
-//     listeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
-//     rawListeners<K extends keyof SpotifyApiEvents>(event: K): (v: SpotifyApiEvents[K]) => void[];
-//     emit<K extends keyof SpotifyApiEvents>(event: K, args: SpotifyApiEvents[K]): boolean;
-//     eventNames<K extends keyof SpotifyApiEvents>(): Array<K>;
-//     listenerCount<K extends keyof SpotifyApiEvents>(type: K): number;
-// }
-
-
 /**
  * The interface exposed by the React Native Module
  *
@@ -44,7 +25,19 @@ interface SpotifyEventEmitter extends TypedEventEmitter<SpotifyApiEvents>{
 export interface SpotifyNativeApi {
     isInitialized(): boolean;
     isConnected(): boolean;
+
+
+    /**
+     * Asynchronous call to get whether or not the Spotify Remote is connected
+     *
+     * @returns {Promise<boolean>}
+     * @memberof SpotifyNativeApi
+     */
+    isConnectedAsync():Promise<boolean>;
+
     initialize(config: SpotifyApiConfig): Promise<void>;
+
+    connect():Promise<void>;
 
     /**
      * Play a track, album, playlist or artist via spotifyUri
