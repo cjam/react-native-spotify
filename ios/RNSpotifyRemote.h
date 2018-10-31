@@ -13,8 +13,8 @@
 
 @interface RNSpotifyRemote : NSObject <RCTBridgeModule, RNEventConformer>
 
-// isInitialized
--(id)isInitialized;
+//// isInitialized
+//-(id)isInitialized;
 
 -(void)isConnectedAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 

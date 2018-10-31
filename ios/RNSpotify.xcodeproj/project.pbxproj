@@ -58,6 +58,7 @@
 		D67AF676216EC15000859404 /* RNSpotifyItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyItem.h; sourceTree = "<group>"; };
 		D67AF677216F9D7D00859404 /* NSArrayExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSArrayExtensions.h; sourceTree = "<group>"; };
 		D67AF678216F9D8C00859404 /* NSArrayExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSArrayExtensions.m; sourceTree = "<group>"; };
+		D6B12178218A54670017FD2F /* RNSpotify.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotify.h; sourceTree = "<group>"; };
 		D6F24B822165372200D58B82 /* RNSpotifyRemote.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNSpotifyRemote.h; sourceTree = "<group>"; };
 		D6F24B832165372500D58B82 /* RNSpotifyRemote.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyRemote.m; sourceTree = "<group>"; };
 		D6F24BC221665F4A00D58B82 /* RNSpotifyError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNSpotifyError.m; sourceTree = "<group>"; };
@@ -88,6 +89,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				D6B12178218A54670017FD2F /* RNSpotify.h */,
 				D67AF678216F9D8C00859404 /* NSArrayExtensions.m */,
 				D67AF677216F9D7D00859404 /* NSArrayExtensions.h */,
 				D64EA981218375B0001B053B /* RNSpotifyAuth.h */,
