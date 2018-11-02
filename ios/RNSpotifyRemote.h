@@ -16,8 +16,11 @@
 //// isInitialized
 //-(id)isInitialized;
 
++(instancetype)sharedInstance;
+
 -(void)isConnectedAsync:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
+-(void)disconnect;
 -(void)connect:(NSString*)accessToken resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 // Playback API

@@ -42,17 +42,26 @@ static RNSpotifyRemote *sharedInstance = nil;
 
 -(id)init
 {
-    if(self = [super init])
-    {
-        NSLog(@"RNSpotify Initialized");
-        _isConnecting=NO;
-        _appRemoteCallbacks = [NSMutableArray array];
-        
-        _appRemote = nil;
-        _eventSubscriptions = @{}.mutableCopy;
-        _eventSubscriptionCallbacks = [self initializeEventSubscribers];
+    // This is to hopefully maintain the singleton pattern within our React App.
+    // Since ReactNative is the one allocating and initializing our instance,
+    // we need to store the instance within the sharedInstance otherwise we'll
+    // end up with a different one when calling shared instance statically
+    if(sharedInstance == nil){
+        if(self = [super init]){
+            NSLog(@"RNSpotify Initialized");
+            _isConnecting=NO;
+            _appRemoteCallbacks = [NSMutableArray array];
+            
+            _appRemote = nil;
+            _eventSubscriptions = @{}.mutableCopy;
+            _eventSubscriptionCallbacks = [self initializeEventSubscribers];
+        }
+        static dispatch_once_t once;
+        dispatch_once(&once, ^{
+            sharedInstance = self;
+        });
     }
-    return self;
+    return sharedInstance;
 }
 
 - (NSDictionary*)initializeEventSubscribers{
@@ -100,6 +109,17 @@ static RNSpotifyRemote *sharedInstance = nil;
 //    [completion reject:[RNSpotifyError errorWithCodeObj:[RNSpotifyErrorCode NotImplemented]]];
 }
 
++ (instancetype)sharedInstance {
+    // Hopefully ReactNative can take care of allocating and initializing our instance
+    // otherwise we'll need to check here
+    return sharedInstance;
+}
+
+- (void)disconnect{
+    if([ self isConnected] == YES){
+        [_appRemote disconnect];
+    }
+}
 
 #pragma mark - SPTAppRemotePlayerStateDelegate implementation
 
