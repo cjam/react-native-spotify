@@ -19,6 +19,7 @@
 @synthesize subtitle;
 @synthesize title;
 @synthesize URI;
+@synthesize children;
 
 -(id)initWithJson:(NSDictionary *)json{
     if(self = [super init])
@@ -31,6 +32,7 @@
         subtitle = json[@"subtitle"] != nil ? json[@"subtitle"] : [NSNull null];
         title = json[@"title"] != nil ? json[@"title"] : [NSNull null];
         URI = json[@"uri"] != nil ? json[@"uri"] : [NSNull null];
+        children = json[@"children"] != nil ? [json valueForKey:@"children"] : ;
     }
     return self;
 }

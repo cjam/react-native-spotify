@@ -136,5 +136,22 @@
     return json;
 }
 
+// Spotify Changed their API from enum to string, but still have enums in android
+// so we'll just convert in ios to remain consistent from typescript / javascript
++(SPTAppRemoteContentType)SPTAppRemoteContentType:(NSUInteger) enumVal{
+    switch (enumVal) {
+        case 0:
+            return SPTAppRemoteContentTypeDefault;
+            break;
+        case 1:
+            return SPTAppRemoteContentTypeNavigation;
+        case 2:
+            return SPTAppRemoteContentTypeFitness;
+        default:
+            return SPTAppRemoteContentTypeDefault;
+            break;
+    }
+}
+
 
 @end

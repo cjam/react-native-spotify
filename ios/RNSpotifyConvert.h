@@ -19,5 +19,6 @@
 +(id)SPTAppRemoteAlbum:(NSObject<SPTAppRemoteAlbum> *) album;
 +(id)SPTAppRemoteContentItem:(NSObject<SPTAppRemoteContentItem> *) item;
 +(id)SPTAppRemoteContentItems:(NSArray *) items;
++(SPTAppRemoteContentType)SPTAppRemoteContentType:(NSUInteger) enumVal;
 
 @end

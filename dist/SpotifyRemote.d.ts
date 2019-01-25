@@ -73,7 +73,11 @@ export interface SpotifyRemoteApi extends TypedEventEmitter<SpotifyRemoteEvents>
     setShuffling(shuffling: boolean): Promise<void>;
     setRepeatMode(mode: RepeatMode): Promise<void>;
     getPlayerState(): Promise<PlayerState>;
-    getRecommendedContentItems(type: ContentType): Promise<ContentItem[]>;
+    getRecommendedContentItems(payload: {
+        contentType?: ContentType;
+        flattenContainers?: boolean;
+    }): Promise<ContentItem[]>;
+    getRootContentItems(type: ContentType): Promise<ContentItem[]>;
     getChildrenOfItem(item: Pick<ContentItem, 'uri' | 'id'>): Promise<ContentItem[]>;
 }
 declare const SpotifyRemote: SpotifyRemoteApi;

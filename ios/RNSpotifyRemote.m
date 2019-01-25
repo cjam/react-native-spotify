@@ -272,13 +272,35 @@ RCT_EXPORT_METHOD(getPlayerState:(RCTPromiseResolveBlock)resolve reject:(RCTProm
     });
 }
 
+RCT_EXPORT_METHOD(getRootContentItems:(NSUInteger) typeVal resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    SPTAppRemoteContentType contentType = [RNSpotifyConvert SPTAppRemoteContentType: typeVal];
+    RCTExecuteOnMainQueue(^{
+        if(self->_appRemote != nil && self->_appRemote.contentAPI != nil){
+            [self->_appRemote.contentAPI fetchRootContentItemsForType:contentType
+                callback:^(NSArray* _Nullable result, NSError * _Nullable error){
+                    if(error != nil){
+                        [[RNSpotifyError errorWithNSError:error] reject:reject];
+                    }else{
+                        resolve([RNSpotifyConvert SPTAppRemoteContentItems:result]);
+                    }
+                }
+             ];
+        }
+    });
+}
 
 
-RCT_EXPORT_METHOD(getRecommendedContentItems:(NSUInteger) typeVal resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    SPTAppRemoteContentType contentType = typeVal;
+RCT_EXPORT_METHOD(getRecommendedContentItems:(NSDictionary*)json resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    SPTAppRemoteContentType contentType = json[@"contentType"] != nil
+        ? [RNSpotifyConvert SPTAppRemoteContentType:[json[@"subtitle"] unsignedIntegerValue] ]
+        : SPTAppRemoteContentTypeDefault;
+
+    BOOL flattenContainers = [json[@"flattenContainers"] boolValue];
+    
     RCTExecuteOnMainQueue(^{
         if(self->_appRemote != nil && self->_appRemote.contentAPI != nil){
             [self->_appRemote.contentAPI fetchRecommendedContentItemsForType:contentType
+                flattenContainers:flattenContainers
                 callback:^(NSArray* _Nullable result, NSError * _Nullable error){
                    if(error != nil){
                        [[RNSpotifyError errorWithNSError:error] reject:reject];
